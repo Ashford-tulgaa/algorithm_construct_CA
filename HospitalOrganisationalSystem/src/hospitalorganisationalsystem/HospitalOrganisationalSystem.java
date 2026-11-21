@@ -38,7 +38,6 @@ public class HospitalOrganisationalSystem {
         System.out.println("       Welcome, Hospital Administrator.");
         System.out.println();
 
-        // Ask for the employee data filename.
         System.out.print("Enter the employee data filename: ");
         String fileName = scanner.nextLine().trim();
 
@@ -48,23 +47,22 @@ public class HospitalOrganisationalSystem {
             ArrayList<Employee> employees =
                     EmployeeFileReader.loadEmployees(fileName);
 
-            // Extract departments and management types.
+            // Extract unique departments and management types.
             ArrayList<Department> departments =
                     HospitalDataExtractor.extractDepartments(employees);
 
             ArrayList<Manager> managers =
                     HospitalDataExtractor.extractManagers(employees);
 
-            // Create the alphabetically sorted employee list.
+            // Sort employee records alphabetically.
             ArrayList<Employee> sortedEmployees =
                     EmployeeMergeSort.sort(employees);
 
-            // Create and populate the employee binary tree.
-            EmployeeBinaryTree employeeTree = new EmployeeBinaryTree();
+            // Create and build the organisational hierarchy.
+            OrganisationalHierarchy hierarchy =
+                    new OrganisationalHierarchy();
 
-            for (Employee employee : employees) {
-                employeeTree.insert(employee);
-            }
+            hierarchy.buildHierarchy(employees);
 
             // Display database loading information.
             System.out.println();
@@ -75,7 +73,6 @@ public class HospitalOrganisationalSystem {
             System.out.println("Departments identified  : " + departments.size());
             System.out.println("Management types found  : " + managers.size());
 
-            // Administrator menu continues until EXIT is selected.
             boolean running = true;
 
             while (running) {
@@ -84,41 +81,42 @@ public class HospitalOrganisationalSystem {
                 System.out.println("============================================================");
                 System.out.println("             HOSPITAL ADMINISTRATOR MENU");
                 System.out.println("============================================================");
-                System.out.println("1. Sort Employees");
-                System.out.println("2. Search Employee");
-                System.out.println("3. Add New Employee");
-                System.out.println("4. Display Employee Binary Tree");
-                System.out.println("5. Exit");
-                System.out.println("============================================================");
 
-                System.out.print("Select an option: ");
-                String input = scanner.nextLine().trim();
-
-                // Convert the user's selection into a menu enum value.
-                MenuOption selectedOption;
-
-                switch (input) {
-                    case "1":
-                        selectedOption = MenuOption.SORT_EMPLOYEES;
-                        break;
-                    case "2":
-                        selectedOption = MenuOption.SEARCH_EMPLOYEE;
-                        break;
-                    case "3":
-                        selectedOption = MenuOption.ADD_EMPLOYEE;
-                        break;
-                    case "4":
-                        selectedOption = MenuOption.DISPLAY_EMPLOYEE_TREE;
-                        break;
-                    case "5":
-                        selectedOption = MenuOption.EXIT;
-                        break;
-                    default:
-                        System.out.println("Invalid selection. Enter a number from 1 to 5.");
-                        continue;
+                // Display menu options.
+                for (MenuOption option : MenuOption.values()) {
+                    System.out.println(option.getMenuNumber() + ". "
+                            + option.getDescription());
                 }
 
-                // Run the operation selected by the administrator.
+                System.out.println("============================================================");
+                System.out.print("Select an option: ");
+
+                String input = scanner.nextLine().trim();
+
+                MenuOption selectedOption = null;
+
+                // Convert the entered number into a menu enum value.
+                try {
+                    int choice = Integer.parseInt(input);
+
+                    for (MenuOption option : MenuOption.values()) {
+                        if (option.getMenuNumber() == choice) {
+                            selectedOption = option;
+                            break;
+                        }
+                    }
+
+                } catch (NumberFormatException e) {
+                    // Invalid numeric input.
+                }
+
+                // Reject invalid menu selections.
+                if (selectedOption == null) {
+                    System.out.println("Invalid selection. Please try again.");
+                    continue;
+                }
+
+                // Execute the selected menu operation.
                 switch (selectedOption) {
 
                     case SORT_EMPLOYEES:
@@ -136,6 +134,7 @@ public class HospitalOrganisationalSystem {
                             System.out.println((i + 1) + ". "
                                     + sortedEmployees.get(i).getFullName());
                         }
+
                         break;
 
                     case SEARCH_EMPLOYEE:
@@ -153,6 +152,7 @@ public class HospitalOrganisationalSystem {
                                         sortedEmployees, searchName);
 
                         if (foundEmployee != null) {
+
                             System.out.println();
                             System.out.println("EMPLOYEE FOUND");
                             System.out.println("Name        : "
@@ -161,38 +161,65 @@ public class HospitalOrganisationalSystem {
                                     + foundEmployee.getJobTitle());
                             System.out.println("Department  : "
                                     + foundEmployee.getDepartment());
+
                         } else {
                             System.out.println("EMPLOYEE NOT FOUND");
                         }
+
                         break;
 
                     case ADD_EMPLOYEE:
 
+                        Employee newEmployee =
+                                EmployeeInputHandler.createEmployee(
+                                        scanner, managers, departments);
+
+                        employees.add(newEmployee);
+
+                        // Update the sorted employee list.
+                        sortedEmployees =
+                                EmployeeMergeSort.sort(employees);
+
+                        // Rebuild the organisational hierarchy.
+                        hierarchy.buildHierarchy(employees);
+
                         System.out.println();
-                        System.out.println("Add Employee functionality will be connected next.");
+                        System.out.println("============================================================");
+                        System.out.println("             EMPLOYEE SUCCESSFULLY ADDED");
+                        System.out.println("============================================================");
+                        System.out.println("Name        : "
+                                + newEmployee.getFullName());
+                        System.out.println("Designation : "
+                                + newEmployee.getJobTitle());
+                        System.out.println("Department  : "
+                                + newEmployee.getDepartment());
+                        System.out.println("============================================================");
+
                         break;
 
-                    case DISPLAY_EMPLOYEE_TREE:
+                    case DISPLAY_ORGANISATIONAL_HIERARCHY:
 
                         System.out.println();
-                        System.out.println("HOSPITAL EMPLOYEE BINARY TREE");
+                        System.out.println("============================================================");
+                        System.out.println("          HOSPITAL ORGANISATIONAL HIERARCHY");
+                        System.out.println("============================================================");
 
-                        employeeTree.displayLevelOrder();
+                        hierarchy.displayHierarchy();
 
                         System.out.println();
-                        System.out.println("TREE STATISTICS");
-                        System.out.println("Total employee nodes : "
-                                + employeeTree.getTotalNodes());
-                        System.out.println("Tree height          : "
-                                + employeeTree.getHeight());
+                        System.out.println("Total employees in hierarchy: "
+                                + hierarchy.getTotalNodes());
+
                         break;
 
                     case EXIT:
 
                         running = false;
+
                         System.out.println();
                         System.out.println("Hospital system shutting down.");
                         System.out.println("Goodbye, Administrator.");
+
                         break;
                 }
             }

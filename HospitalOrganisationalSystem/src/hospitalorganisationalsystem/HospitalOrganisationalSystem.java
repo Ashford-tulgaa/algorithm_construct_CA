@@ -15,6 +15,7 @@ public class HospitalOrganisationalSystem {
 
         // Scanner allows the user to enter information in the console.
         Scanner scanner = new Scanner(System.in);
+
         // Welcoming command line screen
         System.out.println();
         System.out.println("  +================================================================+");
@@ -53,16 +54,51 @@ public class HospitalOrganisationalSystem {
             ArrayList<Employee> employees =
                     EmployeeFileReader.loadEmployees(fileName);
 
-            // Display the loading result.
-            System.out.println("\nHospital Organisational System");
-            System.out.println("--------------------------------");
-            System.out.println("Employees loaded: " + employees.size());
+            // Extract unique departments from the employee records.
+            ArrayList<Department> departments =
+                    HospitalDataExtractor.extractDepartments(employees);
 
-            // Display the first employee as a loading test.
-            if (!employees.isEmpty()) {
-                System.out.println("\nFirst employee loaded:");
-                System.out.println(employees.get(0));
+            // Extract management designations from the employee records.
+            ArrayList<Manager> managers =
+                    HospitalDataExtractor.extractManagers(employees);
+            
+            // Sort employee records alphabetically by full name.
+            ArrayList<Employee> sortedEmployees =
+            EmployeeMergeSort.sort(employees);
+
+            // Display the database loading report.
+            System.out.println();
+            System.out.println("============================================================");
+            System.out.println("                 DATABASE LOADING REPORT");
+            System.out.println("============================================================");
+            System.out.println();
+
+            System.out.println("Employee records loaded : " + employees.size());
+            System.out.println("Departments identified : " + departments.size());
+            System.out.println("Management types found : " + managers.size());
+
+            // Display all identified departments.
+            System.out.println();
+            System.out.println("AVAILABLE DEPARTMENTS");
+            System.out.println("---------------------");
+
+            for (Department department : departments) {
+                System.out.println("- " + department.getDepartmentName());
             }
+
+            // Display all identified management types.
+            System.out.println();
+            System.out.println("MANAGEMENT TYPES");
+            System.out.println("----------------");
+
+            for (Manager manager : managers) {
+                System.out.println("- " + manager.getManagerType());
+            }
+
+            System.out.println();
+            System.out.println("============================================================");
+            System.out.println("              EMPLOYEE DATABASE READY");
+            System.out.println("============================================================");
 
         } catch (IOException e) {
 

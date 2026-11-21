@@ -7,16 +7,15 @@ import java.util.Scanner;
 
 /**
  * Main class of the Hospital Organisational System.
- * Starts the application and loads employee data.
+ * Loads employee data and provides an administrator menu.
  */
 public class HospitalOrganisationalSystem {
 
     public static void main(String[] args) {
 
-        // Scanner allows the user to enter information in the console.
         Scanner scanner = new Scanner(System.in);
 
-        // Welcoming command line screen
+        // Welcoming command line screen.
         System.out.println();
         System.out.println("  +================================================================+");
         System.out.println("  |                                                                |");
@@ -38,71 +37,168 @@ public class HospitalOrganisationalSystem {
         System.out.println("       [ SYSTEM INITIALISED ]");
         System.out.println("       Welcome, Hospital Administrator.");
         System.out.println();
-        System.out.println("       Employee records database requires initialisation.");
-        System.out.println("       Enter the source data file to proceed.");
-        System.out.println();
-        System.out.println("  ------------------------------------------------------------------");
-        System.out.println();
 
-        // Ask the user for the sample data filename.
+        // Ask for the employee data filename.
         System.out.print("Enter the employee data filename: ");
         String fileName = scanner.nextLine().trim();
 
         try {
 
-            // Load employee records using the filename entered by the user.
+            // Load employee records from the CSV file.
             ArrayList<Employee> employees =
                     EmployeeFileReader.loadEmployees(fileName);
 
-            // Extract unique departments from the employee records.
+            // Extract departments and management types.
             ArrayList<Department> departments =
                     HospitalDataExtractor.extractDepartments(employees);
 
-            // Extract management designations from the employee records.
             ArrayList<Manager> managers =
                     HospitalDataExtractor.extractManagers(employees);
-            
-            // Sort employee records alphabetically by full name.
-            ArrayList<Employee> sortedEmployees =
-            EmployeeMergeSort.sort(employees);
 
-            // Display the database loading report.
+            // Create the alphabetically sorted employee list.
+            ArrayList<Employee> sortedEmployees =
+                    EmployeeMergeSort.sort(employees);
+
+            // Create and populate the employee binary tree.
+            EmployeeBinaryTree employeeTree = new EmployeeBinaryTree();
+
+            for (Employee employee : employees) {
+                employeeTree.insert(employee);
+            }
+
+            // Display database loading information.
             System.out.println();
             System.out.println("============================================================");
             System.out.println("                 DATABASE LOADING REPORT");
             System.out.println("============================================================");
-            System.out.println();
-
             System.out.println("Employee records loaded : " + employees.size());
-            System.out.println("Departments identified : " + departments.size());
-            System.out.println("Management types found : " + managers.size());
+            System.out.println("Departments identified  : " + departments.size());
+            System.out.println("Management types found  : " + managers.size());
 
-            // Display all identified departments.
-            System.out.println();
-            System.out.println("AVAILABLE DEPARTMENTS");
-            System.out.println("---------------------");
+            // Administrator menu continues until EXIT is selected.
+            boolean running = true;
 
-            for (Department department : departments) {
-                System.out.println("- " + department.getDepartmentName());
+            while (running) {
+
+                System.out.println();
+                System.out.println("============================================================");
+                System.out.println("             HOSPITAL ADMINISTRATOR MENU");
+                System.out.println("============================================================");
+                System.out.println("1. Sort Employees");
+                System.out.println("2. Search Employee");
+                System.out.println("3. Add New Employee");
+                System.out.println("4. Display Employee Binary Tree");
+                System.out.println("5. Exit");
+                System.out.println("============================================================");
+
+                System.out.print("Select an option: ");
+                String input = scanner.nextLine().trim();
+
+                // Convert the user's selection into a menu enum value.
+                MenuOption selectedOption;
+
+                switch (input) {
+                    case "1":
+                        selectedOption = MenuOption.SORT_EMPLOYEES;
+                        break;
+                    case "2":
+                        selectedOption = MenuOption.SEARCH_EMPLOYEE;
+                        break;
+                    case "3":
+                        selectedOption = MenuOption.ADD_EMPLOYEE;
+                        break;
+                    case "4":
+                        selectedOption = MenuOption.DISPLAY_EMPLOYEE_TREE;
+                        break;
+                    case "5":
+                        selectedOption = MenuOption.EXIT;
+                        break;
+                    default:
+                        System.out.println("Invalid selection. Enter a number from 1 to 5.");
+                        continue;
+                }
+
+                // Run the operation selected by the administrator.
+                switch (selectedOption) {
+
+                    case SORT_EMPLOYEES:
+
+                        sortedEmployees = EmployeeMergeSort.sort(employees);
+
+                        System.out.println();
+                        System.out.println("FIRST 20 EMPLOYEES - A TO Z");
+                        System.out.println("---------------------------");
+
+                        int displayLimit =
+                                Math.min(20, sortedEmployees.size());
+
+                        for (int i = 0; i < displayLimit; i++) {
+                            System.out.println((i + 1) + ". "
+                                    + sortedEmployees.get(i).getFullName());
+                        }
+                        break;
+
+                    case SEARCH_EMPLOYEE:
+
+                        System.out.print("Enter employee full name: ");
+                        String searchName = scanner.nextLine().trim();
+
+                        if (searchName.isEmpty()) {
+                            System.out.println("Search name cannot be empty.");
+                            break;
+                        }
+
+                        Employee foundEmployee =
+                                EmployeeBinarySearch.search(
+                                        sortedEmployees, searchName);
+
+                        if (foundEmployee != null) {
+                            System.out.println();
+                            System.out.println("EMPLOYEE FOUND");
+                            System.out.println("Name        : "
+                                    + foundEmployee.getFullName());
+                            System.out.println("Designation : "
+                                    + foundEmployee.getJobTitle());
+                            System.out.println("Department  : "
+                                    + foundEmployee.getDepartment());
+                        } else {
+                            System.out.println("EMPLOYEE NOT FOUND");
+                        }
+                        break;
+
+                    case ADD_EMPLOYEE:
+
+                        System.out.println();
+                        System.out.println("Add Employee functionality will be connected next.");
+                        break;
+
+                    case DISPLAY_EMPLOYEE_TREE:
+
+                        System.out.println();
+                        System.out.println("HOSPITAL EMPLOYEE BINARY TREE");
+
+                        employeeTree.displayLevelOrder();
+
+                        System.out.println();
+                        System.out.println("TREE STATISTICS");
+                        System.out.println("Total employee nodes : "
+                                + employeeTree.getTotalNodes());
+                        System.out.println("Tree height          : "
+                                + employeeTree.getHeight());
+                        break;
+
+                    case EXIT:
+
+                        running = false;
+                        System.out.println();
+                        System.out.println("Hospital system shutting down.");
+                        System.out.println("Goodbye, Administrator.");
+                        break;
+                }
             }
-
-            // Display all identified management types.
-            System.out.println();
-            System.out.println("MANAGEMENT TYPES");
-            System.out.println("----------------");
-
-            for (Manager manager : managers) {
-                System.out.println("- " + manager.getManagerType());
-            }
-
-            System.out.println();
-            System.out.println("============================================================");
-            System.out.println("              EMPLOYEE DATABASE READY");
-            System.out.println("============================================================");
 
         } catch (IOException e) {
 
-            // Display an error if the file cannot be read.
             System.out.println("\nError loading employee data: "
                     + e.getMessage());
         }
